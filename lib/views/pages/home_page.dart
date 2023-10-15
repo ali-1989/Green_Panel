@@ -1,14 +1,19 @@
 import 'package:app/managers/settings_manager.dart';
 import 'package:app/structures/middleWares/requester.dart';
+import 'package:app/structures/models/sensor_data_model.dart';
+import 'package:app/structures/models/sensor_model.dart';
+import 'package:app/structures/models/sight_model.dart';
+import 'package:app/structures/models/sync_model.dart';
 import 'package:app/system/extensions.dart';
 import 'package:app/system/keys.dart';
 import 'package:app/tools/app/app_decoration.dart';
-import 'package:app/tools/app/app_http.dart';
 import 'package:app/tools/app/app_icons.dart';
+import 'package:app/tools/date_tools.dart';
 import 'package:flutter/material.dart';
 
-
 import 'package:app/structures/abstract/state_super.dart';
+import 'package:iris_tools/api/converter.dart';
+import 'package:iris_tools/dateSection/dateHelper.dart';
 
 class HomePage extends StatefulWidget {
   // ignore: prefer_const_constructors_in_immutables
@@ -23,12 +28,20 @@ class HomePage extends StatefulWidget {
 class HomePageState extends StateSuper<HomePage> {
   String url = '${SettingsManager.localSettings.httpAddress}/test';
   ScrollController scrollCtr = ScrollController();
-  List<Map> greenMind = [];
+  List<Map> greenMindList = [];
+  List<SightModel> greenSightList = [];
+  List<SyncModel> greenSyncList = [];
+  List<SensorModel> sensorList = [];
+  List<SensorDataModel> currentSensorDataList = [];
 
 
   @override
   void initState(){
     super.initState();
+
+    requestGreenMind();
+    requestGreenSight();
+    requestGreenSync();
   }
 
   @override
@@ -78,8 +91,27 @@ class HomePageState extends StateSuper<HomePage> {
           const Divider(),
           const SizedBox(height: 12),
 
+          buildRegisterGreenSight(),
 
-          buildRegisterGreenMin(),
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          buildRegisterGreenSync(),
+
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          buildRegisterSensor(),
+
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          buildRegisterSensorData(),
+
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -112,7 +144,7 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('response: {"status":"ok", "id" : "mind id"}'),
 
         IconButton(
-            onPressed: onRefreshGreenMind,
+            onPressed: requestGreenMind,
             icon: const Icon(AppIcons.refresh)
         ),
         
@@ -134,11 +166,11 @@ class HomePageState extends StateSuper<HomePage> {
     );
   }
 
-  Widget buildRegisterGreenMin() {
+  Widget buildRegisterGreenSight() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Registering Green Mind').bold().color(AppDecoration.mainColor),
+        const Text('Registering Green Sight').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
         Row(
@@ -146,7 +178,12 @@ class HomePageState extends StateSuper<HomePage> {
           children: [
             const Text('Sample:  ').bold(),
             const Expanded(
-                child: SelectableText('{"request": "register_green_mind", "serial": "abcdef", "product_date": "2023-10-11"}')
+                child: SelectableText('{'
+                    '"request": "register_green_sight",'
+                    ' "serial_number": "abcdef",'
+                    ' "mind_id": 10,'
+                    ' "product_date": "2023-10-11"}'
+                )
             ),
           ],
         ),
@@ -154,13 +191,13 @@ class HomePageState extends StateSuper<HomePage> {
         Row(
           children: [
             const Text('required fields: ').bold(),
-            const Text('serial'),
+            const Text('serial_number, mind_id'),
           ],
         ),
-        const Text('response: {"id" : "mind id"}'),
+        const Text('response: {"id" : "sight id"}'),
 
         IconButton(
-            onPressed: onRefreshGreenMind,
+            onPressed: requestGreenSight,
             icon: const Icon(AppIcons.refresh)
         ),
 
@@ -169,13 +206,190 @@ class HomePageState extends StateSuper<HomePage> {
             columns: const [
               DataColumn(label: Text('ID')),
               DataColumn(label: Text('SN')),
+              DataColumn(label: Text('mind')),
               DataColumn(label: Text('firmware')),
-              DataColumn(label: Text('register_date')),
-              DataColumn(label: Text('product_date')),
-              DataColumn(label: Text('active_date')),
+              DataColumn(label: Text('register date')),
+              DataColumn(label: Text('product date')),
             ],
             rows: [
-              ...generateGreenMindRows(),
+              ...generateGreenSightRows(),
+            ],
+        )
+      ],
+    );
+  }
+
+  Widget buildRegisterGreenSync() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Registering Green Sync').bold().color(AppDecoration.mainColor),
+        const SizedBox(height: 20),
+        SelectableText('URL: $url'),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Sample:  ').bold(),
+            const Expanded(
+                child: SelectableText('{'
+                    '"request": "register_green_sync",'
+                    ' "serial_number": "abcdef",'
+                    ' "mind_id": 10,'
+                    ' "firmware_version": 2,'
+                    ' "product_date": "2023-10-11"}'
+                )
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('serial_number, mind_id'),
+          ],
+        ),
+        const Text('response: {"id" : "sync id"}'),
+
+        IconButton(
+            onPressed: requestGreenSync,
+            icon: const Icon(AppIcons.refresh)
+        ),
+
+        DataTable(
+          border: TableBorder.all(color: Colors.black54, width: 1),
+            columns: const [
+              DataColumn(label: Text('ID')),
+              DataColumn(label: Text('SN')),
+              DataColumn(label: Text('mind')),
+              DataColumn(label: Text('firmware')),
+              DataColumn(label: Text('register date')),
+              DataColumn(label: Text('product date')),
+            ],
+            rows: [
+              ...generateGreenSyncRows(),
+            ],
+        )
+      ],
+    );
+  }
+
+  Widget buildRegisterSensor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Registering Sensor').bold().color(AppDecoration.mainColor),
+        const SizedBox(height: 20),
+        SelectableText('URL: $url'),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Sample:  ').bold(),
+            const Expanded(
+                child: SelectableText('{'
+                    '"request": "register_sensor",'
+                    ' "mind_id": 10,'
+                    ' "sensor_type": 2,'
+                    '}'
+                )
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('sensor_type, mind_id'),
+          ],
+        ),
+        const Text('response: {"id" : "sensor id"}'),
+
+        IconButton(
+            onPressed: requestSensors,
+            icon: const Icon(AppIcons.refresh)
+        ),
+
+        DataTable(
+          border: TableBorder.all(color: Colors.black54, width: 1),
+            columns: const [
+              DataColumn(label: Text('ID')),
+              DataColumn(label: Text('mind')),
+              DataColumn(label: Text('sensor type')),
+              DataColumn(label: Text('register date')),
+            ],
+            rows: [
+              ...generateSensorRows(),
+            ],
+        )
+      ],
+    );
+  }
+
+  Widget buildRegisterSensorData() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('add Sensor data').bold().color(AppDecoration.mainColor),
+        const SizedBox(height: 20),
+        SelectableText('URL: $url'),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Sample:  ').bold(),
+            const Expanded(
+                child: SelectableText('{'
+                    '"request": "set_sensor_data",'
+                    ' "register_id": 2,'
+                    ' "data": json'
+                    '}'
+                )
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('register_id, data'),
+          ],
+        ),
+        const Text('response: {"status" : "ok"}'),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            const Text('Sensor ID: '),
+
+            SizedBox(
+              width: 100,
+                child: TextField(
+                  decoration: AppDecoration.outlineBordersInputDecoration.copyWith(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.all(10),
+                  ),
+                )
+            ),
+
+            const SizedBox(width: 20),
+
+            ElevatedButton(
+                onPressed: (){
+                  requestSensorData(1);
+                },
+                child: const Text('Get sensor data')
+            ),
+          ],
+        ),
+
+        DataTable(
+          border: TableBorder.all(color: Colors.black54, width: 1),
+            columns: const [
+              DataColumn(label: Text('Sensor ID')),
+              DataColumn(label: Text('receive date')),
+              DataColumn(label: Text('data')),
+            ],
+            rows: [
+              ...generateSensorDataRows(),
             ],
         )
       ],
@@ -183,20 +397,124 @@ class HomePageState extends StateSuper<HomePage> {
   }
 
   List generateGreenMindRows(){
-    return [
-      const DataRow(cells: [
-        DataCell(Text('100'),) ,
-        DataCell(Text('sdfghjkl')),
-        DataCell(Text('123456789123456789')),
-        DataCell(Text('2023/20/20')),
-        DataCell(Text('2023/20/20')),
-        DataCell(Text('2023/20/20')),
-      ]),
-    ];
-  }
-  void onRefreshGreenMind() {
-    final ht = HttpItem();
+    List<DataRow> ret = [];
+    List<String> keys = ['id', 'serial_number', 'firmware_version', 'register_date', 'product_date',  'communication_date'];
 
+    for(final x in greenMindList){
+      List<DataCell> cells = [];
+
+      for(final k in keys){
+        for (final i in x.entries) {
+          if(i.key == k){
+            dynamic d = i.value;
+
+            if(k.contains('_date')) {
+              d = DateTools.dateOnlyRelative(DateHelper.timestampToSystem(d));
+            }
+
+            cells.add(DataCell(Text('$d')));
+            break;
+          }
+        }
+      }
+
+      ret.add(DataRow(cells: cells));
+    }
+
+    return ret;
+  }
+
+  List generateGreenSightRows(){
+    List<DataRow> ret = [];
+
+    for(final x in greenSightList) {
+      List<DataCell> cells = [];
+      List items = [];
+
+      items.add(x.id);
+      items.add(x.serialNumber);
+      items.add(x.mindId);
+      items.add(x.firmwareVersion?? '');
+      items.add(DateTools.dateOnlyRelative(x.productDate));
+      items.add(DateTools.dateOnlyRelative(x.registerDate));
+
+      for(final k in items) {
+        cells.add(DataCell(Text('$k')));
+      }
+
+      ret.add(DataRow(cells: cells));
+    }
+
+    return ret;
+  }
+
+  List generateGreenSyncRows(){
+    List<DataRow> ret = [];
+
+    for(final x in greenSyncList) {
+      List<DataCell> cells = [];
+      List items = [];
+
+      items.add(x.id);
+      items.add(x.serialNumber);
+      items.add(x.mindId);
+      items.add(x.firmwareVersion?? '');
+      items.add(DateTools.dateOnlyRelative(x.productDate));
+      items.add(DateTools.dateOnlyRelative(x.registerDate));
+
+      for(final k in items) {
+        cells.add(DataCell(Text('$k')));
+      }
+
+      ret.add(DataRow(cells: cells));
+    }
+
+    return ret;
+  }
+
+  List generateSensorRows(){
+    List<DataRow> ret = [];
+
+    for(final x in sensorList) {
+      List<DataCell> cells = [];
+      List items = [];
+
+      items.add(x.id);
+      items.add(x.mindId);
+      items.add(x.sensorType);
+      items.add(DateTools.dateOnlyRelative(x.registerDate));
+
+      for(final k in items) {
+        cells.add(DataCell(Text('$k')));
+      }
+
+      ret.add(DataRow(cells: cells));
+    }
+
+    return ret;
+  }
+
+  List generateSensorDataRows(){
+    List<DataRow> ret = [];
+
+    for(final x in currentSensorDataList) {
+      List<DataCell> cells = [];
+      List items = [];
+
+      items.add(x.sensorId);
+      items.add(DateTools.dateOnlyRelative(x.receiveDate));
+      items.add(x.data);
+
+      for(final k in items) {
+        cells.add(DataCell(Text('$k')));
+      }
+
+      ret.add(DataRow(cells: cells));
+    }
+
+    return ret;
+  }
+  void requestGreenMind() {
     final r = Requester();
     r.httpItem.method = 'POST';
     r.httpItem.fullUrl = url;
@@ -206,9 +524,106 @@ class HomePageState extends StateSuper<HomePage> {
     r.httpRequestEvents.onAnyState = (res) async {
       if(res.isOk){
         Map r = res.getBodyAsJson()!;
-        greenMind = r[Keys.date];
-        print('yyyyyyyyyy');
-        print(greenMind);
+        greenMindList = Converter.correctList(r[Keys.data])!;
+
+        setState(() {});
+      }
+
+      return null;
+    };
+
+    r.request();
+  }
+
+  void requestGreenSight() {
+    final r = Requester();
+    r.httpItem.method = 'POST';
+    r.httpItem.fullUrl = url;
+    r.bodyJson = {};
+    r.bodyJson!['request'] = 'get_green_sights';
+
+    r.httpRequestEvents.onAnyState = (res) async {
+      if(res.isOk){
+        Map r = res.getBodyAsJson()!;
+
+        for(final k in r[Keys.data]){
+          greenSightList.add(SightModel.fromMap(k));
+        }
+
+        setState(() {});
+      }
+
+      return null;
+    };
+
+    r.request();
+  }
+
+  void requestGreenSync() {
+    final r = Requester();
+    r.httpItem.method = 'POST';
+    r.httpItem.fullUrl = url;
+    r.bodyJson = {};
+    r.bodyJson!['request'] = 'get_green_syncs';
+
+    r.httpRequestEvents.onAnyState = (res) async {
+      if(res.isOk){
+        Map r = res.getBodyAsJson()!;
+
+        for(final k in r[Keys.data]){
+          greenSyncList.add(SyncModel.fromMap(k));
+        }
+
+        setState(() {});
+      }
+
+      return null;
+    };
+
+    r.request();
+  }
+
+  void requestSensors() {
+    final r = Requester();
+    r.httpItem.method = 'POST';
+    r.httpItem.fullUrl = url;
+    r.bodyJson = {};
+    r.bodyJson!['request'] = 'get_sensors';
+
+    r.httpRequestEvents.onAnyState = (res) async {
+      if(res.isOk){
+        Map r = res.getBodyAsJson()!;
+
+        for(final k in r[Keys.data]){
+          sensorList.add(SensorModel.fromMap(k));
+        }
+
+        setState(() {});
+      }
+
+      return null;
+    };
+
+    r.request();
+  }
+
+  void requestSensorData(int sensorId) {
+    final r = Requester();
+    r.httpItem.method = 'POST';
+    r.httpItem.fullUrl = url;
+    r.bodyJson = {};
+    r.bodyJson!['request'] = 'get_sensor_data';
+    r.bodyJson!['sensor_id'] = sensorId;
+
+    r.httpRequestEvents.onAnyState = (res) async {
+      if(res.isOk){
+        Map r = res.getBodyAsJson()!;
+
+        for(final k in r[Keys.data]){
+          currentSensorDataList.add(SensorDataModel.fromMap(k));
+        }
+
+        setState(() {});
       }
 
       return null;
