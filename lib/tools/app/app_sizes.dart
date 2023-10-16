@@ -17,7 +17,7 @@ class AppSizes {
   static bool _initialState = false;
 
   static double sizeOfBigScreen = 700;
-  static double webMaxWidthSize = 500;
+  static double webMaxWidthSize = 600;
 
   double? realPixelWidth;
   double? realPixelHeight;

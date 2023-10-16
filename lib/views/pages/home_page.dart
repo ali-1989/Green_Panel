@@ -8,11 +8,13 @@ import 'package:app/system/extensions.dart';
 import 'package:app/system/keys.dart';
 import 'package:app/tools/app/app_decoration.dart';
 import 'package:app/tools/app/app_icons.dart';
+import 'package:app/tools/app/app_snack.dart';
 import 'package:app/tools/date_tools.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app/structures/abstract/state_super.dart';
 import 'package:iris_tools/api/converter.dart';
+import 'package:iris_tools/api/helpers/mathHelper.dart';
 import 'package:iris_tools/dateSection/dateHelper.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,6 +36,8 @@ class HomePageState extends StateSuper<HomePage> {
   List<SensorModel> sensorList = [];
   List<SensorDataModel> currentSensorDataList = [];
 
+  TextEditingController sensorIdCtr = TextEditingController();
+
 
   @override
   void initState(){
@@ -42,6 +46,7 @@ class HomePageState extends StateSuper<HomePage> {
     requestGreenMind();
     requestGreenSight();
     requestGreenSync();
+    requestSensors();
   }
 
   @override
@@ -81,6 +86,11 @@ class HomePageState extends StateSuper<HomePage> {
               const Text('json').bold(),
             ],
           ),
+
+          const SizedBox(height: 30),
+          const Text('Sample of JSON:').bold(),
+          const SelectableText('{ "request": "register_green_mind",  "serial_number": "abcdef",  "product_date": "2023-10-11" }'),
+
           const SizedBox(height: 30),
           const Divider(),
           const SizedBox(height: 12),
@@ -124,24 +134,30 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('Registering Green Mind').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
+
+        const SizedBox(height: 5),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Sample:  ').bold(),
-            const Expanded(
-                child: SelectableText('{"request": "register_green_mind", "serial_number": "abcdef", "product_date": "2023-10-11"}')
-            ),
+            const Text('request key: ').bold(),
+            const Text('register_green_mind'),
           ],
         ),
 
-        const SizedBox(height: 5),
         Row(
           children: [
             const Text('required fields: ').bold(),
             const Text('serial_number'),
           ],
         ),
-        const Text('response: {"status":"ok", "id" : "mind id"}'),
+
+        Row(
+          children: [
+            const Text('optional fields: ').bold(),
+            const Text('product_date,  firmware_version'),
+          ],
+        ),
+
+        const Text('response: {"status": "ok",  "id" : "a mind id"}'),
 
         IconButton(
             onPressed: requestGreenMind,
@@ -173,28 +189,30 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('Registering Green Sight').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Sample:  ').bold(),
-            const Expanded(
-                child: SelectableText('{'
-                    '"request": "register_green_sight",'
-                    ' "serial_number": "abcdef",'
-                    ' "mind_id": 10,'
-                    ' "product_date": "2023-10-11"}'
-                )
-            ),
-          ],
-        ),
+
         const SizedBox(height: 5),
         Row(
           children: [
-            const Text('required fields: ').bold(),
-            const Text('serial_number, mind_id'),
+            const Text('request key: ').bold(),
+            const Text('register_green_sight'),
           ],
         ),
-        const Text('response: {"id" : "sight id"}'),
+
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('serial_number,  mind_id'),
+          ],
+        ),
+
+        Row(
+          children: [
+            const Text('optional fields: ').bold(),
+            const Text('product_date,  firmware_version'),
+          ],
+        ),
+
+        const Text('response: {"status": "ok",  "id" : "a sight id"}'),
 
         IconButton(
             onPressed: requestGreenSight,
@@ -226,29 +244,30 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('Registering Green Sync').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Sample:  ').bold(),
-            const Expanded(
-                child: SelectableText('{'
-                    '"request": "register_green_sync",'
-                    ' "serial_number": "abcdef",'
-                    ' "mind_id": 10,'
-                    ' "firmware_version": 2,'
-                    ' "product_date": "2023-10-11"}'
-                )
-            ),
-          ],
-        ),
+
         const SizedBox(height: 5),
         Row(
           children: [
-            const Text('required fields: ').bold(),
-            const Text('serial_number, mind_id'),
+            const Text('request key: ').bold(),
+            const Text('register_green_sync'),
           ],
         ),
-        const Text('response: {"id" : "sync id"}'),
+
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('serial_number,  mind_id'),
+          ],
+        ),
+
+        Row(
+          children: [
+            const Text('optional fields: ').bold(),
+            const Text('product_date,  firmware_version'),
+          ],
+        ),
+
+        const Text('response: {"status": "ok",  "id" : "a sync id"}'),
 
         IconButton(
             onPressed: requestGreenSync,
@@ -280,28 +299,32 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('Registering Sensor').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Sample:  ').bold(),
-            const Expanded(
-                child: SelectableText('{'
-                    '"request": "register_sensor",'
-                    ' "mind_id": 10,'
-                    ' "sensor_type": 2,'
-                    '}'
-                )
-            ),
-          ],
-        ),
+
+
         const SizedBox(height: 5),
         Row(
           children: [
-            const Text('required fields: ').bold(),
-            const Text('sensor_type, mind_id'),
+            const Text('request key: ').bold(),
+            const Text('register_sensor'),
           ],
         ),
-        const Text('response: {"id" : "sensor id"}'),
+
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('sensor_type,  mind_id'),
+          ],
+        ),
+
+        Row(
+          children: [
+            const Text('optional fields: ').bold(),
+            const Text('product_date,  firmware_version'),
+          ],
+        ),
+
+        const Text('response: {"status": "ok",  "id" : "a sensor id"}'),
+
 
         IconButton(
             onPressed: requestSensors,
@@ -331,28 +354,30 @@ class HomePageState extends StateSuper<HomePage> {
         const Text('add Sensor data').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Sample:  ').bold(),
-            const Expanded(
-                child: SelectableText('{'
-                    '"request": "set_sensor_data",'
-                    ' "register_id": 2,'
-                    ' "data": json'
-                    '}'
-                )
-            ),
-          ],
-        ),
+
         const SizedBox(height: 5),
         Row(
           children: [
-            const Text('required fields: ').bold(),
-            const Text('register_id, data'),
+            const Text('request key: ').bold(),
+            const Text('set_sensor_data'),
           ],
         ),
-        const Text('response: {"status" : "ok"}'),
+
+        Row(
+          children: [
+            const Text('required fields: ').bold(),
+            const Text('sensor_id,  data'),
+          ],
+        ),
+
+        Row(
+          children: [
+            const Text('optional fields: ').bold(),
+            const Text('not have'),
+          ],
+        ),
+
+        const Text('response: { "status": "ok" }'),
 
         const SizedBox(height: 12),
 
@@ -363,6 +388,7 @@ class HomePageState extends StateSuper<HomePage> {
             SizedBox(
               width: 100,
                 child: TextField(
+                  controller: sensorIdCtr,
                   decoration: AppDecoration.outlineBordersInputDecoration.copyWith(
                     isDense: true,
                     contentPadding: const EdgeInsets.all(10),
@@ -374,7 +400,14 @@ class HomePageState extends StateSuper<HomePage> {
 
             ElevatedButton(
                 onPressed: (){
-                  requestSensorData(1);
+                  final id = MathHelper.clearToInt(sensorIdCtr.text.trim());
+
+                  if(id < 1){
+                    AppSnack.showInfo(context, 'please enter sensor ID');
+                    return;
+                  }
+
+                  requestSensorData(id);
                 },
                 child: const Text('Get sensor data')
             ),
@@ -514,6 +547,7 @@ class HomePageState extends StateSuper<HomePage> {
 
     return ret;
   }
+
   void requestGreenMind() {
     final r = Requester();
     r.httpItem.method = 'POST';

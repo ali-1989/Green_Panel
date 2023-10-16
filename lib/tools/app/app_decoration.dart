@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:iris_tools/api/helpers/colorHelper.dart';
@@ -6,6 +7,7 @@ import 'package:app/managers/font_manager.dart';
 import 'package:app/tools/app/app_messages.dart';
 import 'package:app/tools/app/app_sizes.dart';
 import 'package:app/tools/app/app_themes.dart';
+import 'package:iris_tools/api/helpers/mathHelper.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class AppDecoration {
@@ -161,6 +163,12 @@ class AppDecoration {
     Clip clip = Clip.hardEdge,
   }){
 
+    double? w;
+
+    if(width != null){
+      w = kIsWeb? MathHelper.minDouble(width, AppSizes.webMaxWidthSize) : width;
+    }
+
     return SnackBar(
       content: replaceContent?? Text(message),
       behavior: behavior,
@@ -168,10 +176,10 @@ class AppDecoration {
       backgroundColor: backgroundColor,
       dismissDirection: DismissDirection.horizontal,
       action: action,
-      width: width?? (AppSizes.isBigWidth()? AppSizes.webMaxWidthSize: null),
+      width: w,
       elevation: elevation,
       padding: padding,
-      margin: margin, /*default: fromLTRB(15.0, 5.0, 15.0, 10.0)*/
+      margin: margin, /* default: fromLTRB(15.0, 5.0, 15.0, 10.0) */
       clipBehavior: clip,
       shape: shape,
     );
