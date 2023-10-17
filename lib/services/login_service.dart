@@ -69,7 +69,7 @@ class LoginService {
       DeviceInfoTools.attachDeviceInfo(reqJs, curUser: user);
 
       final info = HttpItem();
-      info.fullUrl = '${SettingsManager.localSettings.httpAddress}/graph-v1';
+      info.fullUrl = '${SettingsManager.localSettings.httpAddress}/v1';
       info.method = 'POST';
       info.body = JsonHelper.mapToJson(reqJs);
       info.setResponseIsPlain();
