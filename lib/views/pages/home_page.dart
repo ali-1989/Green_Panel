@@ -32,7 +32,7 @@ class HomePageState extends StateSuper<HomePage> {
   ScrollController scrollCtr = ScrollController();
   List<Map> greenMindList = [];
   List<SightModel> greenSightList = [];
-  List<SyncModel> greenSyncList = [];
+  List<SyncModel> greenGuideList = [];
   List<SensorModel> sensorList = [];
   List<SensorDataModel> currentSensorDataList = [];
 
@@ -45,7 +45,7 @@ class HomePageState extends StateSuper<HomePage> {
 
     requestGreenMind();
     requestGreenSight();
-    requestGreenSync();
+    requestGreenGuide();
     requestSensors();
   }
 
@@ -241,7 +241,7 @@ class HomePageState extends StateSuper<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Registering Green Sync').bold().color(AppDecoration.mainColor),
+        const Text('Registering Green Guide').bold().color(AppDecoration.mainColor),
         const SizedBox(height: 20),
         SelectableText('URL: $url'),
 
@@ -267,10 +267,10 @@ class HomePageState extends StateSuper<HomePage> {
           ],
         ),
 
-        const Text('response: {"status": "ok",  "id" : "a sync id"}'),
+        const Text('response: {"status": "ok",  "id" : "a guide id"}'),
 
         IconButton(
-            onPressed: requestGreenSync,
+            onPressed: requestGreenGuide,
             icon: const Icon(AppIcons.refresh)
         ),
 
@@ -484,7 +484,7 @@ class HomePageState extends StateSuper<HomePage> {
   List generateGreenSyncRows(){
     List<DataRow> ret = [];
 
-    for(final x in greenSyncList) {
+    for(final x in greenGuideList) {
       List<DataCell> cells = [];
       List items = [];
 
@@ -578,6 +578,7 @@ class HomePageState extends StateSuper<HomePage> {
 
     r.httpRequestEvents.onAnyState = (res) async {
       if(res.isOk){
+        greenSightList.clear();
         Map r = res.getBodyAsJson()!;
 
         for(final k in r[Keys.data]){
@@ -593,7 +594,7 @@ class HomePageState extends StateSuper<HomePage> {
     r.request();
   }
 
-  void requestGreenSync() {
+  void requestGreenGuide() {
     final r = Requester();
     r.httpItem.method = 'POST';
     r.httpItem.fullUrl = url;
@@ -602,10 +603,11 @@ class HomePageState extends StateSuper<HomePage> {
 
     r.httpRequestEvents.onAnyState = (res) async {
       if(res.isOk){
+        greenGuideList.clear();
         Map r = res.getBodyAsJson()!;
 
         for(final k in r[Keys.data]){
-          greenSyncList.add(SyncModel.fromMap(k));
+          greenGuideList.add(SyncModel.fromMap(k));
         }
 
         setState(() {});
@@ -626,6 +628,7 @@ class HomePageState extends StateSuper<HomePage> {
 
     r.httpRequestEvents.onAnyState = (res) async {
       if(res.isOk){
+        sensorList.clear();
         Map r = res.getBodyAsJson()!;
 
         for(final k in r[Keys.data]){
@@ -651,6 +654,7 @@ class HomePageState extends StateSuper<HomePage> {
 
     r.httpRequestEvents.onAnyState = (res) async {
       if(res.isOk){
+        currentSensorDataList.clear();
         Map r = res.getBodyAsJson()!;
 
         for(final k in r[Keys.data]){
